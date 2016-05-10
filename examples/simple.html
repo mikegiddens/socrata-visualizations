@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Simple Examples</title>
+    </head>
+
+    <body>
+        <h3>Earthquakes dataset</h3>
+        <br>
+        <div>
+            <p>Count of earthquakes by Stations </p>
+            <div id="countStation"></div>
+        </div>
+        <div>
+            <p>Number of Stations by Regions </p>
+            <div id="stationbyregion"></div>
+        </div>
+        <div>
+            <p>Depth of Earthquakes at Virgin Islands region </p>
+            <div id="countQuakes"></div>
+        </div>
+        
+        <link rel="stylesheet" href="../vendors/c3/c3.min.js">
+        
+        <script src="../vendors/jquery-1.11.3.min.js"></script>
+        <script src="../vendors/d3.min.js"></script>
+        <script src="../vendors/c3/c3.min.js"></script>
+        <script src="../vendors/soda-js.js"></script>
+        <script src="../socrata-visualizations.js"></script>
+    
+        <script>
+            $(function () {
+                var table = '6yvf-kk3n',
+                    baseUrl = 'soda.demo.socrata.com';
+              
+                pieStationCount = new SV.PieChart('#countStation', {
+                    table: table,
+                    baseUrl: baseUrl
+                });
+                
+//                pieStationCount.store.load({
+//                    field: 'number_of_stations',
+//                    select: ['number_of_stations', 'count(*) AS count'],
+//                    group: ['number_of_stations']
+//                });
+                
+                pieStationCount.loadCount('number_of_stations')
+                
+                pieStationByRegion = new SV.PieChart('#stationbyregion', {
+                    table: table,
+                    baseUrl: baseUrl,
+                });
+                pieStationByRegion.loadSum('region',{
+                    aggregatefield: 'number_of_stations'
+                });
+
+
+                piefilterCount = new SV.PieChart('#countQuakes', {
+                    table: table,
+                    baseUrl: baseUrl,
+                    size: {
+                        width: 300,
+                        height: 300
+                    },
+                    legend: {
+                      show: true,
+                      position: 'bottom'
+                    }
+                });
+
+
+//                piefilterCount.store.load({
+//                    field: 'depth',
+//                    select: ['depth', 'count(*) AS count'],
+//                    where: "region='Virgin Islands region'",
+//                    group: ['depth']
+//                });
+                
+                piefilterCount.loadCount('depth',{
+                    where: "region='Virgin Islands region'"
+                });
+
+            })
+        </script>
+    </body>
+</html>
