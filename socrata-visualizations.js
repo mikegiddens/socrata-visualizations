@@ -414,10 +414,9 @@ SV.PieChart.prototype.loadSum = function (field, options) {
     storeoptions.group = field;
     storeoptions.select = [field];
     storeoptions.select.push( (options && options.aggregatefield)? 'sum(' + options.aggregatefield + ') AS count' : 'sum(*) AS count');
-    (options && options.where) ? (storeoptions.where = options.where) : '';
-    console.log(storeoptions)
-    (options && options.order) ? (storeoptions.order = options.order) : '';
-    (options && options.filter) ? (storeoptions.filter = options.filter) : '';
+    storeoptions.where = (options && options.where) ? options.where : '';
+    storeoptions.order = (options && options.order) ? options.order : '';
+    storeoptions.filter = (options && options.filter) ? options.filter : '';
     self.store.load(storeoptions);
 }
 

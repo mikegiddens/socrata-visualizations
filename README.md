@@ -36,27 +36,58 @@ Javascript library to quickly render graphic components based on Socrata as the 
 * SV.PieChart - Pie chart class
 * SV.Store - Stand alone store class
 
+# Demos
+
+* [Pie charts](https://htmlpreview.github.io/?https://github.com/mikegiddens/socrata-visualizations/blob/master/examples/simple.html)
+* Bar charts (Coming soon...)
+* Store (Coming soon...)
+
 ---------------------------------------
 
-# SV.PieChart
+# SV.PieChart(el, options)
 
 ## Properties
+
+### el
 
 ### table
 This is the 4x4
 
 ## Methods
 
-### loadCount(column)
+### render(data)
+
+### getPercent(key)
+
+### getValue(key)
+
+### loadCount(field, options)
 This is a shortcut function of store.load() 
 
-### loadSum(column, options)
+### loadAvg(field, options)
+
+### loadSum(field, options)
 
 ## Events
 
 ---------------------------------------
 
-# SV.Store (Class)
+# SV.BarChart(el, options)
+
+---------------------------------------
+
+# SV.Combo(el, options)
+
+This is a combobox that will populate values from a Socrata table and column
+
+##methods
+
+### render(data)
+
+---------------------------------------
+
+# SV.Store(options, parent)
+
 This is part of each of the visualization components and it can be used independtly
 
 ## methods
