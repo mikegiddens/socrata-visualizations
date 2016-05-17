@@ -236,7 +236,9 @@ SV.Combo.prototype.render = function (data) {
             this.value = $(this.el + " option:selected").val();
             this.fire('change', [$(this.el + " option:selected").val()]);
         }, this));
-        data = _.pluck(data, this.field);
+        data = data.map(function(rec) {
+            return rec[self.field];
+        });
         $(this.el).append('<option value="' + this.defaultvalue + '" selected>' + this.defaulttext + '</option>');
         data.forEach(function (cat) {
             $(self.el).append('<option value="' + cat + '" >' + cat + '</option>');
