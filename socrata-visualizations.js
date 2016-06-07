@@ -138,7 +138,11 @@ SV.Store = function (options, parent) {
     if(parent) {
         this._parent = parent;
     }
-    this.consumer = new soda.Consumer(this.baseUrl);
+    if(this.baseUrl) {
+        this.baseUrl = this.baseUrl.replace(/https:\/\//,'').replace(/http:\/\//,'');
+        this.baseUrl = "https://" + this.baseUrl;
+    }
+//    this.consumer = new soda.Consumer(this.baseUrl);
     EventManager.eventify(this);
     return this;
 }
@@ -169,46 +173,17 @@ SV.Store.prototype.load = function (options, callback) {
     if(options.field && self._parent) {
         self._parent.field = options.field;
     }
-    if (options.filter) {
-        where = this.generateFilter(options.filter);
-    }
-    if (options.where) {
-        if (where == null) {
-            where = [];
-        }
-        if (typeof options.where == 'string') {
-            where.push(options.where);
-        } else if (typeof options.where == 'object') {
-            for (var k in options.where) {
-                where.push([k, '=', options.where[k]].join(''));
+//    console.log(self.baseUrl + '/resource/' + self.table + '.json', options.filter);
+    $.getJSON(self.baseUrl + '/resource/' + self.table + '.json', options.filter, function (rows) {
+        if (rows) {
+            self.fire('load', [rows]);
+            if (callback) {
+                callback(rows);
             }
         }
-    }
-    var promise = this.consumer.query().withDataset(this.table);
-    if (options.select) {
-        promise = promise.select(options.select);
-    }
-    if (where) {
-        promise = promise.where(where.join(' AND '));
-    }
-    if (options.group) {
-        promise = promise.group(options.group);
-    }
-    if (options.order) {
-        promise = promise.order(options.order);
-    }
-    promise.getRows()
-        .on('success', function (rows) {
-            if (rows) {
-                self.fire('load', [rows]);
-                if (callback) {
-                    callback(rows);
-                }
-            }
-        })
-        .on('error', function (error) {
-            console.error(error);
-        });
+    }).fail(function() {
+        console.log("Error in query");
+    });
     return this;
 }
 
@@ -387,12 +362,20 @@ SV.PieChart.prototype.loadCount = function (field, options) {
     var self = this;
     var storeoptions = {};
     storeoptions.field = field;
-    storeoptions.group = field;
-    storeoptions.select = [field];
-    storeoptions.select.push( (options && options.aggregatefield)? 'count(' + options.aggregatefield + ') AS count' : 'count(*) AS count');
-    (options && options.where) ? (storeoptions.where = options.where) : '';
-    (options && options.order) ? (storeoptions.order = options.order) : '';
-    (options && options.filter) ? (storeoptions.filter = options.filter) : '';
+    
+    var select = [field];
+    select.push( (options && options.aggregatefield)? 'count(' + options.aggregatefield + ') AS count' : 'count(*) AS count');
+    storeoptions.filter = {
+        "$select": select.join(',')
+    };
+    if(options && options.where) {
+         storeoptions.filter["$where"] = options.where;
+    }
+    if(options && options.where) {
+         storeoptions.filter["$order"] = options.order;
+    }
+    storeoptions.filter["$group"] = field;
+    
     self.store.load(storeoptions);
 }
 
@@ -401,11 +384,20 @@ SV.PieChart.prototype.loadAvg = function (field, options) {
     var storeoptions = {};
     storeoptions.field = field;
     storeoptions.group = field;
-    storeoptions.select = [field];
-    storeoptions.select.push( (options && options.aggregatefield)? 'avg(' + options.aggregatefield + ') AS count' : 'avg(*) AS count');
-    (options && options.where) ? (storeoptions.where = options.where) : '';
-    (options && options.order) ? (storeoptions.order = options.order) : '';
-    (options && options.filter) ? (storeoptions.filter = options.filter) : '';
+    
+    var select = [field];
+    select.push( (options && options.aggregatefield)? 'avg(' + options.aggregatefield + ') AS count' : 'avg(*) AS count');
+    storeoptions.filter = {
+        "$select": select.join(',')
+    };
+    if(options && options.where) {
+         storeoptions.filter["$where"] = options.where;
+    }
+    if(options && options.where) {
+         storeoptions.filter["$order"] = options.order;
+    }
+    storeoptions.filter["$group"] = field;
+    
     self.store.load(storeoptions);
 }
 
@@ -414,11 +406,20 @@ SV.PieChart.prototype.loadSum = function (field, options) {
     var storeoptions = {};
     storeoptions.field = field;
     storeoptions.group = field;
-    storeoptions.select = [field];
-    storeoptions.select.push( (options && options.aggregatefield)? 'sum(' + options.aggregatefield + ') AS count' : 'sum(*) AS count');
-    storeoptions.where = (options && options.where) ? options.where : '';
-    storeoptions.order = (options && options.order) ? options.order : '';
-    storeoptions.filter = (options && options.filter) ? options.filter : '';
+    
+    var select = [field];
+    select.push( (options && options.aggregatefield)? 'sum(' + options.aggregatefield + ') AS count' : 'sum(*) AS count');
+    storeoptions.filter = {
+        "$select": select.join(',')
+    };
+    if(options && options.where) {
+         storeoptions.filter["$where"] = options.where;
+    }
+    if(options && options.where) {
+         storeoptions.filter["$order"] = options.order;
+    }
+    storeoptions.filter["$group"] = field;
+    
     self.store.load(storeoptions);
 }
 
