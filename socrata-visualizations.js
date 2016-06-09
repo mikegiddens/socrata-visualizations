@@ -147,26 +147,6 @@ SV.Store = function (options, parent) {
     return this;
 }
 
-SV.Store.prototype.generateFilter = function (options) {
-    var where = null;
-    if (options) {
-        where = [];
-        options.forEach(function (option) {
-            switch (option.operator) {
-            case '=':
-                where.push([option.field, '=', "'" + option.value + "'"].join(''));
-                break;
-            case 'between':
-                if (option.value && option.value.after && option.value.before) {
-                    where.push(option.field + '>="' + option.value.after + '" AND ' + option.field + '<"' + option.value.before + '"');
-                }
-                break;
-            }
-        })
-    }
-    return where;
-}
-
 SV.Store.prototype.load = function (options, callback) {
     var self = this;
     var where = null;
@@ -174,16 +154,18 @@ SV.Store.prototype.load = function (options, callback) {
         self._parent.field = options.field;
     }
 //    console.log(self.baseUrl + '/resource/' + self.table + '.json', options.filter);
-    $.getJSON(self.baseUrl + '/resource/' + self.table + '.json', options.filter, function (rows) {
-        if (rows) {
-            self.fire('load', [rows]);
-            if (callback) {
-                callback(rows);
+    if(options.filter) {
+        $.getJSON(self.baseUrl + '/resource/' + self.table + '.json', options.filter, function (rows) {
+            if (rows) {
+                self.fire('load', [rows]);
+                if (callback) {
+                    callback(rows);
+                }
             }
-        }
-    }).fail(function() {
-        console.log("Error in query");
-    });
+        }).fail(function() {
+            console.log("Error in query");
+        });
+    }
     return this;
 }
 
@@ -332,7 +314,7 @@ SV.PieChart.prototype.render = function (data) {
 
 SV.PieChart.prototype.getPercent = function (ky) {
     var op = null;
-    if (ky && this.chartObj.data()) {
+    if (ky && this.chartObj && this.chartObj.data()) {
         this.chartObj.data().forEach(function (dt) {
             if (ky == dt.id) {
                 if (dt && dt.values && dt.values[0] && dt.values[0].value) {
@@ -346,7 +328,7 @@ SV.PieChart.prototype.getPercent = function (ky) {
 
 SV.PieChart.prototype.getValue = function (ky) {
     var op = null;
-    if (ky && this.chartObj.data()) {
+    if (ky && this.chartObj && this.chartObj.data()) {
         this.chartObj.data().forEach(function (dt) {
             if (ky == dt.id) {
                 if (dt && dt.values && dt.values[0] && dt.values[0].value) {
@@ -502,7 +484,7 @@ SV.BarChart.prototype.render = function (data) {
 
 SV.BarChart.prototype.getPercent = function (ky) {
     var op = null;
-    if (ky && this.chartObj.data()) {
+    if (ky && this.chartObj && this.chartObj.data()) {
         this.chartObj.data().forEach(function (dt) {
             if (ky == dt.id) {
                 if (dt && dt.values && dt.values[0] && dt.values[0].value) {
@@ -517,7 +499,7 @@ SV.BarChart.prototype.getPercent = function (ky) {
 
 SV.BarChart.prototype.getValue = function (ky) {
     var op = null;
-    if (ky && this.chartObj.data()) {
+    if (ky && this.chartObj && this.chartObj.data()) {
         this.chartObj.data().forEach(function (dt) {
             if (ky == dt.id) {
                 if (dt && dt.values && dt.values[0] && dt.values[0].value) {
@@ -528,4 +510,25 @@ SV.BarChart.prototype.getValue = function (ky) {
 
     }
     return op;
+}
+
+SV.BarChart.prototype.loadCount = function (field, options) {
+    var self = this;
+    var storeoptions = {};
+    storeoptions.field = field;
+    
+    var select = [field];
+    select.push( (options && options.aggregatefield)? 'count(' + options.aggregatefield + ') AS count' : 'count(*) AS count');
+    storeoptions.filter = {
+        "$select": select.join(',')
+    };
+    if(options && options.where) {
+         storeoptions.filter["$where"] = options.where;
+    }
+    if(options && options.where) {
+         storeoptions.filter["$order"] = options.order;
+    }
+    storeoptions.filter["$group"] = field;
+    
+    self.store.load(storeoptions);
 }
